@@ -28,6 +28,10 @@ public class MovementVector extends Vector {
         return new MovementVector(to.getX() - from.getX(), to.getY() - from.getY(), to.getZ() - from.getZ());
     }
 
+    public boolean isZero() {
+        return x == 0 && y == 0 && z == 0;
+    }
+
     public MovementVector checkIfSmall() {
         small = x <= 8 && y <= 8 && z <= 8;
         return this;

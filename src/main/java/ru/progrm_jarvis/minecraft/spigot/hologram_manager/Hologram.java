@@ -6,7 +6,6 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import lombok.*;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -42,9 +41,9 @@ public class Hologram extends ArrayList<HologramLine> {
     // DataWatcher
     ///////////////////////////////////////////////////////////////////////////
 
-    public WrappedDataWatcher.Serializer DATA_BOOLEAN_SERIALIZER = WrappedDataWatcher.Registry.get(Boolean.class);
-    public WrappedDataWatcher.Serializer DATA_BYTE_SERIALIZER = WrappedDataWatcher.Registry.get(Byte.class);
-    public WrappedDataWatcher.Serializer DATA_STRING_SERIALIZER = WrappedDataWatcher.Registry.get(String.class);
+    private WrappedDataWatcher.Serializer DATA_BOOLEAN_SERIALIZER = WrappedDataWatcher.Registry.get(Boolean.class);
+    private WrappedDataWatcher.Serializer DATA_BYTE_SERIALIZER = WrappedDataWatcher.Registry.get(Byte.class);
+    private WrappedDataWatcher.Serializer DATA_STRING_SERIALIZER = WrappedDataWatcher.Registry.get(String.class);
 
     public WrappedDataWatcher getDataWithName(final String name) {
         // Custom name
@@ -142,6 +141,8 @@ public class Hologram extends ArrayList<HologramLine> {
      * @param players to which players should the ru.progrm_jarvis.minecraft.spigot.hologram_manager.packet be sent
      */
     public Hologram move( final MovementVector movement, final Player... players) {
+        if (movement.isZero()) return this;
+
         val packets = new AbstractPacket[size()];
 
         int i = 0;
