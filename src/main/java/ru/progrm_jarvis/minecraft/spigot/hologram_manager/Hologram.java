@@ -22,7 +22,7 @@ import java.util.*;
 @AllArgsConstructor
 @SuppressWarnings("unused")
 public class Hologram extends ArrayList<HologramLine> {
-    private static final long serialVersionUID = -6704502063423313450L;
+    private static final long serialVersionUID = 480275233413221397L;
 
     @NonNull private final String id;
     @NonNull private final boolean global;
@@ -31,6 +31,11 @@ public class Hologram extends ArrayList<HologramLine> {
 
     @NonNull private final Set<Player> players = new HashSet<>();
     @NonNull private final Set<Player> disabledPlayers = new HashSet<>();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Locks
+    ///////////////////////////////////////////////////////////////////////////
+    @NonNull private final Object[] $locationLock = new Object[0];
 
     public Hologram addAllPlayers(final Player... players) {
         this.players.addAll(Arrays.asList(players));
@@ -138,9 +143,9 @@ public class Hologram extends ArrayList<HologramLine> {
     /**
      * Moves the hologram relatively according to the {@link Vector} given.
      * @param movement the direction of a movement
-     * @param players to which players should the ru.progrm_jarvis.minecraft.spigot.hologram_manager.packet be sent
+     * @param players to which players should packet be sent
      */
-    public Hologram move( final MovementVector movement, final Player... players) {
+    @Synchronized("$locationLock") public Hologram move(final MovementVector movement, final Player... players) {
         if (movement.isZero()) return this;
 
         val packets = new AbstractPacket[size()];
@@ -195,10 +200,10 @@ public class Hologram extends ArrayList<HologramLine> {
 
     /**
      * Teleports the hologram to the {@link Location} given.
-     * @param location the ru.progrm_jarvis.minecraft.spigot.hologram_manager.util of a hologram base
-     * @param players to which players should the ru.progrm_jarvis.minecraft.spigot.hologram_manager.packet be sent
+     * @param location the location of a hologram base
+     * @param players to which players should the packet be sent
      */
-    public Hologram teleport(final Location location, final Player... players) {
+    @Synchronized("$locationLock") public Hologram teleport(final Location location, final Player... players) {
         // Array of coordinates where util[i] represents the addition of coordinates to this[i] for this[i+1]
         val deltaVectors = new Vector[size() - 1];
 
@@ -225,7 +230,7 @@ public class Hologram extends ArrayList<HologramLine> {
 
     /**
      * Updates the hologram's position to the {@link Location} given.
-     * @param location the ru.progrm_jarvis.minecraft.spigot.hologram_manager.util of a hologram base
+     * @param location the location of a hologram base
      */
     public Hologram changeLocation(final Location location) {
         // Array of coordinates where util[i] represents the addition of coordinates to this[i] for this[i+1]

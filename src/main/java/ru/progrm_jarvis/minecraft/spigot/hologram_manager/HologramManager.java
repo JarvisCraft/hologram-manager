@@ -3,6 +3,7 @@ package ru.progrm_jarvis.minecraft.spigot.hologram_manager;
 import com.comphenix.protocol.ProtocolManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import lombok.*;
 import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Bukkit;
@@ -210,7 +211,8 @@ public class HologramManager {
     // Attachments logic
     ///////////////////////////////////////////////////////////////////////////
 
-    @NonNull @Getter private final Multimap<Player, Hologram> attachments = ArrayListMultimap.create();
+    @NonNull @Getter private final Multimap<Player, Hologram> attachments
+            = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
 
     public HologramManager attach(final Hologram hologram, final Player player) {
 
@@ -292,7 +294,7 @@ public class HologramManager {
         }
     }
 
-    @Synchronized private void moveAttached(final Player player, final Location from, final Location to) {
+    private void moveAttached(final Player player, final Location from, final Location to) {
         // Get all attachments of a player
         val holograms = attachments.get(player);
 
@@ -312,6 +314,12 @@ public class HologramManager {
 
             // return if no attachments to player
             if (holograms == null || holograms.isEmpty()) return;
+
+            val hologramsIterator = holograms.iterator();
+            while (hologramsIterator.hasNext()) {
+                val hologram = hologramsIterator.next();
+                hologram.teleport(event.getTo(), hologram.getAllAvailablePlayers());
+            }
 
             //Move all attached holograms
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
