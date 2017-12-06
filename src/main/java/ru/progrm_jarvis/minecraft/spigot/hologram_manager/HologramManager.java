@@ -315,11 +315,7 @@ public class HologramManager {
             // return if no attachments to player
             if (holograms == null || holograms.isEmpty()) return;
 
-            val hologramsIterator = holograms.iterator();
-            while (hologramsIterator.hasNext()) {
-                val hologram = hologramsIterator.next();
-                hologram.teleport(event.getTo(), hologram.getAllAvailablePlayers());
-            }
+            for (Hologram hologram : holograms) hologram.teleport(event.getTo(), hologram.getAllAvailablePlayers());
 
             //Move all attached holograms
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
