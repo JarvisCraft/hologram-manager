@@ -14,7 +14,7 @@ Due to this library using custom repositories it cannot be deployed to Maven Cen
 </repositories>
 ```
 ```xml
-dependencies>
+<dependencies>
   ...
   <dependency>
     <groupId>com.github.JARVISCRAFT</groupId>
