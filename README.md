@@ -17,8 +17,8 @@ Due to this library using custom repositories it cannot be deployed to Maven Cen
 <dependencies>
   ...
   <dependency>
-    <groupId>com.github.JARVISCRAFT</groupId>
-    <artifactId>SPIGOT-HOLOGRAMMANAGER</artifactId>
+    <groupId>com.github.JarvisCraft</groupId>
+    <artifactId>spigot-HologramManager</artifactId>
     <version>-SNAPSHOT</version>
   </dependency>
   ...
