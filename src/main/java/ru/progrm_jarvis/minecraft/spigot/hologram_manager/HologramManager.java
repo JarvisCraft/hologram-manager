@@ -19,13 +19,14 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.NmsManager;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings("unused")
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class HologramManager {
     @NonNull @Getter private final Plugin plugin;
     @NonNull @Getter private final ProtocolManager protocolManager;
@@ -87,10 +88,9 @@ public class HologramManager {
 
         val hologram = new Hologram(id, global, location.getWorld());
 
-        int entityId = (int) System.nanoTime();
         // Add line to Hologram object
         for (int i = 0; i < lineLocations.length; i++) hologram
-                .add(new HologramLine(text[i], entityId++, lineLocations[i]));
+                .add(new HologramLine(text[i], NmsManager.nextEntityId(), lineLocations[i]));
 
         holograms.put(id, hologram);
 
@@ -134,7 +134,9 @@ public class HologramManager {
     public HologramManager removeAll() {
         for (val hologram : holograms.values()) hologram.despawnAll();
 
-        attachments.clear();
+        synchronized (attachments) {
+            attachments.clear();
+        }
         holograms.clear();
 
         return this;
@@ -226,34 +228,41 @@ public class HologramManager {
     }
 
     public HologramManager detachAll(final Hologram hologram) {
-        val attachments = this.attachments.entries().iterator();
+        synchronized (attachments) {
+            val attachments = this.attachments.entries().iterator();
 
-        while (attachments.hasNext()) if (attachments.next().getValue() == hologram) attachments.remove();
+            while (attachments.hasNext()) if (attachments.next().getValue() == hologram) attachments.remove();
+        }
 
         return this;
     }
 
     public HologramManager detach(final Hologram hologram, final Player... players) {
         for (val player : players) attachments.removeAll(player);
+
         return this;
     }
 
     public HologramManager removeAllAttached(final Player player) {
-        val attachments = this.attachments.entries().iterator();
-        while (attachments.hasNext()) {
-            val entry = attachments.next();
+        synchronized (attachments) {
+            val attachments = this.attachments.entries().iterator();
+            while (attachments.hasNext()) {
+                val entry = attachments.next();
 
-            if (entry.getKey() != player) continue;
+                if (entry.getKey() != player) continue;
 
-            attachments.remove();
+                attachments.remove();
+            }
         }
 
         return this;
     }
 
     public HologramManager syncAllAttached() {
-        for (val entry : attachments.entries()) entry.getValue().teleport(entry.getKey().getLocation(),
-                entry.getValue().getAllAvailablePlayers());
+        synchronized (attachments) {
+            for (val entry : attachments.entries()) entry.getValue().teleport(entry.getKey().getLocation(),
+                    entry.getValue().getAllAvailablePlayers());
+        }
 
         return this;
     }
@@ -302,8 +311,10 @@ public class HologramManager {
         if (holograms == null || holograms.isEmpty()) return;
 
         //Move all attached holograms
-        for (val hologram : holograms) hologram.move(MovementVector
-                .from2Locations(from, to), hologram.getAllAvailablePlayers());
+        synchronized (attachments) {
+            for (val hologram : holograms) hologram.move(MovementVector
+                    .from2Locations(from, to), hologram.getAllAvailablePlayers());
+        }
     }
 
     private final class PlayerTeleportEventListener implements Listener {
@@ -315,13 +326,15 @@ public class HologramManager {
             // return if no attachments to player
             if (holograms == null || holograms.isEmpty()) return;
 
-            for (Hologram hologram : holograms) hologram.teleport(event.getTo(), hologram.getAllAvailablePlayers());
+            synchronized (attachments) {
+                for (Hologram hologram : holograms) hologram.teleport(event.getTo(), hologram.getAllAvailablePlayers());
 
-            //Move all attached holograms
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                for (val hologram : holograms) hologram.teleport(event.getTo(),
-                        hologram.getAllAvailablePlayers());
-            });
+                //Move all attached holograms
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    for (val hologram : holograms) hologram.teleport(event.getTo(),
+                            hologram.getAllAvailablePlayers());
+                });
+            }
         }
     }
 
@@ -343,11 +356,13 @@ public class HologramManager {
         @EventHandler(priority = EventPriority.MONITOR)
         public void onPlayerChangedWorld(final PlayerChangedWorldEvent event) {
             // Get all attachments of a player
-            val hologramsAttached = attachments.get(event.getPlayer());
+            val holograms = attachments.get(event.getPlayer());
 
-            // change world of Hologram to Player's World
-            if (hologramsAttached != null && !hologramsAttached.isEmpty()) for (val hologram
-                    : hologramsAttached) hologram.changeWorld(event.getPlayer().getLocation(), false);
+            synchronized (attachments) {
+                // change world of Hologram to Player's World
+                if (holograms != null && !holograms.isEmpty()) for (val hologram
+                        : holograms) hologram.changeWorld(event.getPlayer().getLocation(), false);
+            }
 
             // Show all possible holograms for this player
             showAllPossible(event.getPlayer());

@@ -3,7 +3,6 @@ package ru.progrm_jarvis.minecraft.spigot.hologram_manager;
 import com.comphenix.packetwrapper.*;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
-import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import lombok.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,6 +12,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.VectorUtils;
+import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.AbstractDataWatcherBuilder;
+import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.DataWatcherBuilder;
+import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.NmsManager;
+import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.OldDataWatcherBuilder;
 
 import java.util.*;
 
@@ -28,6 +31,12 @@ public class Hologram extends ArrayList<HologramLine> {
     @NonNull private final boolean global;
     @NonNull @Setter private World world;
     @Setter private Vector vectorAboveLocation = null;
+    private static final AbstractDataWatcherBuilder dataWatcherBuilder;
+
+    static {
+        dataWatcherBuilder = NmsManager.getNmsVersion().getGeneration() < 9
+                ? new OldDataWatcherBuilder() : new DataWatcherBuilder();
+    }
 
     @NonNull private final Set<Player> players = new HashSet<>();
     @NonNull private final Set<Player> disabledPlayers = new HashSet<>();
@@ -36,6 +45,10 @@ public class Hologram extends ArrayList<HologramLine> {
     // Locks
     ///////////////////////////////////////////////////////////////////////////
     @NonNull private final Object[] $locationLock = new Object[0];
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Overloading constructors
+    ///////////////////////////////////////////////////////////////////////////
 
     public Hologram addAllPlayers(final Player... players) {
         this.players.addAll(Arrays.asList(players));
@@ -46,38 +59,49 @@ public class Hologram extends ArrayList<HologramLine> {
     // DataWatcher
     ///////////////////////////////////////////////////////////////////////////
 
-    private WrappedDataWatcher.Serializer DATA_BOOLEAN_SERIALIZER = WrappedDataWatcher.Registry.get(Boolean.class);
-    private WrappedDataWatcher.Serializer DATA_BYTE_SERIALIZER = WrappedDataWatcher.Registry.get(Byte.class);
-    private WrappedDataWatcher.Serializer DATA_STRING_SERIALIZER = WrappedDataWatcher.Registry.get(String.class);
-
-    public WrappedDataWatcher getDataWithName(final String name) {
-        // Custom name
-        return new WrappedDataWatcher() {{
-            // Invisibility
-            setObject(new WrappedDataWatcherObject(0, DATA_BYTE_SERIALIZER), (byte) 0x20);
-            // Custom name
-            setObject(new WrappedDataWatcherObject(2, DATA_STRING_SERIALIZER), name);
-            // Custom name visibility
-            setObject(new WrappedDataWatcherObject(3, DATA_BOOLEAN_SERIALIZER), true);
-            // No gravity
-            setObject(new WrappedDataWatcherObject(5, DATA_BOOLEAN_SERIALIZER), true);
-            // Marker
-            setObject(new WrappedDataWatcherObject(11, DATA_BYTE_SERIALIZER), (byte) 0x10);
-        }};
+    public WrappedDataWatcher getDefaultDataWatcher(final String name) {
+        return dataWatcherBuilder.builder()
+                .set(0, (byte) 0x20)
+                .set(2, name)
+                .set(3, true)
+                .set(5, true)
+                .set(11, (byte) 0x10)
+                .get();
     }
 
-    public Hologram updateLines(final String[] lines, final Player... players) {
+    public String[] getText() {
+        val text = new String[size()];
+        for (int i = 0; i < size(); i++) text[i] = get(i).getText();
+        return text;
+    }
+
+    public Hologram setText(final String[] lines, final Player... players) {
         val packets = new WrapperPlayServerEntityMetadata[size()];
         int i = 0;
+
         // Create update Packet
         for (val line : this) {
-            final String lineText = lines[i];
+            val lineText = lines[i];
             if (i < lines.length) packets[i++] = new WrapperPlayServerEntityMetadata() {{
                 setEntityID(line.getId());
-                setMetadata(Collections.singletonList(new WrappedWatchableObject(new WrappedDataWatcher
-                        .WrappedDataWatcherObject(2, DATA_STRING_SERIALIZER), lineText)));
+                setMetadata(Collections.singletonList(dataWatcherBuilder.createWatchable(2, lineText)));
             }};
         }
+
+        for (val player : players) for (val packet : packets) packet.sendPacket(player);
+        return this;
+    }
+
+    public Hologram setText(final Map<Integer, String> lines, final Player... players) {
+        val packets = new WrapperPlayServerEntityMetadata[lines.size()];
+        int i = 0;
+
+        // Create update Packet
+        for (val line : lines.entrySet()) packets[i++] = new WrapperPlayServerEntityMetadata() {{
+            setEntityID(get(line.getKey()).getId());
+            setMetadata(Collections.singletonList(dataWatcherBuilder.createWatchable(2, line.getValue())));
+        }};
+
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
         return this;
     }
@@ -96,7 +120,7 @@ public class Hologram extends ArrayList<HologramLine> {
             setX(line.getLocation().getX());
             setY(line.getLocation().getY());
             setZ(line.getLocation().getZ());
-            setMetadata(getDataWithName(line.getText()));
+            setMetadata(getDefaultDataWatcher(line.getText()));
         }};
 
         for (val player : players) for (val packet : packets) {
@@ -342,6 +366,23 @@ public class Hologram extends ArrayList<HologramLine> {
         }};
 
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
+
+        return this;
+    }
+
+    public Hologram add(final HologramLine line, final Vector movePrevious) {
+        for (val previousLine : this) previousLine.getLocation().add(movePrevious);
+
+        add(line);
+
+        return this;
+    }
+
+    public Hologram add(final int index, final HologramLine line, final Vector movePrevious, final Vector moveNext) {
+        add(index, line);
+
+        for (int i = 0; i < index; i++) get(i).getLocation().add(movePrevious);
+        for (int i = index + 1; i < this.size(); i++) get(i).getLocation().add(moveNext);
 
         return this;
     }
