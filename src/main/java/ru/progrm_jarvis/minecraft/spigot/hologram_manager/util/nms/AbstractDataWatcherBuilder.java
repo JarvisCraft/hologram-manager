@@ -22,67 +22,67 @@ public abstract class AbstractDataWatcherBuilder {
     // Byte, Integer, Float, String, IChatBaseComponent, ItemStack, Optional<IBlockData>, Boolean, Vector3f,
     // BlockPosition, Optional<BlockPosition>, EnumDirection, Optional<UUID>, NBTTagCompound
 
-    public WrappedWatchableObject createWatchable(int id, final Byte value) {
+    public WrappedWatchableObject createWatchable(final int id, final Byte value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Integer value) {
+    public WrappedWatchableObject createWatchable(final int id, final Integer value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Float value) {
+    public WrappedWatchableObject createWatchable(final int id, final Float value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final String value) {
+    public WrappedWatchableObject createWatchable(final int id, final String value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchableIChatBaseComponent(int id, final Object value) {
+    public WrappedWatchableObject createWatchableIChatBaseComponent(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final ItemStack value) {
+    public WrappedWatchableObject createWatchable(final int id, final ItemStack value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchableOptionalIBlockData(int id, final Optional<Object> value) {
+    public WrappedWatchableObject createWatchableOptionalIBlockData(final int id, final Optional<Object> value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Boolean value) {
+    public WrappedWatchableObject createWatchable(final int id, final Boolean value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Vector3F value) {
+    public WrappedWatchableObject createWatchable(final int id, final Vector3F value) {
         return createWatchableVector3f(id, vector3FToNms(value));
     }
 
-    public WrappedWatchableObject createWatchableVector3f(int id, final Object value) {
+    public WrappedWatchableObject createWatchableVector3f(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final BlockPosition value) {
+    public WrappedWatchableObject createWatchable(final int id, final BlockPosition value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Optional<BlockPosition> value) {
+    public WrappedWatchableObject createWatchable(final int id, final Optional<BlockPosition> value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchableEnumDirection(int id, final Object value) {
+    public WrappedWatchableObject createWatchableEnumDirection(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchableOptionalUUID(int id, final Optional<UUID> value) {
+    public WrappedWatchableObject createWatchableOptionalUUID(final int id, final Optional<UUID> value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchableNBTTagCompound(int id, final Object value) {
+    public WrappedWatchableObject createWatchableNBTTagCompound(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(int id, final Object value) {
+    public WrappedWatchableObject createWatchable(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
@@ -102,97 +102,97 @@ public abstract class AbstractDataWatcherBuilder {
             this(new WrappedDataWatcher());
         }
 
-        public Builder set(int id, final Byte value) {
+        public Builder set(final int id, final Byte value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final Integer value) {
+        public Builder set(final int id, final Integer value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final Float value) {
+        public Builder set(final int id, final Float value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final String value) {
+        public Builder set(final int id, final String value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder setIChatBaseComponent(int id, Object value) {
+        public Builder setIChatBaseComponent(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
 
-        public Builder set(int id, final ItemStack value) {
+        public Builder set(final int id, final ItemStack value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder setOptionalIBlockData(int id, Optional<Object> value) {
+        public Builder setOptionalIBlockData(final int id, final Optional<Object> value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final Boolean value) {
+        public Builder set(final int id, final Boolean value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final Vector3F value) {
+        public Builder set(final int id, final Vector3F value) {
             return setVector3f(id, vector3FToNms(value));
         }
 
-        public Builder setVector3f(int id, final Object value) {
+        public Builder setVector3f(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final BlockPosition value) {
+        public Builder set(final int id, final BlockPosition value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder set(int id, final Optional<BlockPosition> value) {
+        public Builder set(final int id, final Optional<BlockPosition> value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder setEnumDirection(int id, Object value) {
+        public Builder setEnumDirection(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder setNBTTagCompound(int id, Object value) {
+        public Builder setNBTTagCompound(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
-        public Builder setOptionalUUID(int id, Object value) {
+        public Builder setOptionalUUID(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;
         }
 
         // should be used if and only if none of default #set(id, value) methods don't provide type given
-        public Builder set(int id, final Object value) {
+        public Builder set(final int id, final Object value) {
             dataWatcher.setObject(id, value);
 
             return this;

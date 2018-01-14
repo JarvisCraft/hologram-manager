@@ -118,7 +118,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
     }
 
     @Override
-    public WrappedWatchableObject createWatchableIChatBaseComponent(int id, Object value) {
+    public WrappedWatchableObject createWatchableIChatBaseComponent(final int id, final Object value) {
         return new WrappedWatchableObject(watcherObjectIChatBaseComponent(id), value);
     }
 
@@ -128,7 +128,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
     }
 
     @Override
-    public WrappedWatchableObject createWatchableOptionalIBlockData(int id, Optional<Object> value) {
+    public WrappedWatchableObject createWatchableOptionalIBlockData(final int id, final Optional<Object> value) {
         return new WrappedWatchableObject(watcherObjectOptionalIBlockData(id), value);
     }
 
@@ -148,22 +148,22 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
     }
 
     @Override
-    public WrappedWatchableObject createWatchable(int id, Optional<BlockPosition> value) {
+    public WrappedWatchableObject createWatchable(final int id, final Optional<BlockPosition> value) {
         return new WrappedWatchableObject(watcherObjectOptionalBlockPosition(id), value);
     }
 
     @Override
-    public WrappedWatchableObject createWatchableEnumDirection(int id, Object value) {
+    public WrappedWatchableObject createWatchableEnumDirection(final int id, final Object value) {
         return new WrappedWatchableObject(watcherObjectEnumDirection(id), value);
     }
 
     @Override
-    public WrappedWatchableObject createWatchableOptionalUUID(int id, Optional<UUID> value) {
+    public WrappedWatchableObject createWatchableOptionalUUID(final int id, final Optional<UUID> value) {
         return new WrappedWatchableObject(watcherObjectOptionalUUID(id), value);
     }
 
     @Override
-    public WrappedWatchableObject createWatchableNBTTagCompound(int id, Object value) {
+    public WrappedWatchableObject createWatchableNBTTagCompound(final int id, final Object value) {
         return new WrappedWatchableObject(watcherObjectNBTTagCompound(id), value);
     }
 
@@ -220,7 +220,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setIChatBaseComponent(int id, Object value) {
+        public AbstractDataWatcherBuilder.Builder setIChatBaseComponent(final int id, final Object value) {
             dataWatcher.setObject(watcherObjectIChatBaseComponent(id), value);
 
             return this;
@@ -234,7 +234,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setOptionalIBlockData(int id, Optional<Object> value) {
+        public AbstractDataWatcherBuilder.Builder setOptionalIBlockData(final int id, final Optional<Object> value) {
             dataWatcher.setObject(watcherObjectOptionalIBlockData(id), value);
 
             return this;
@@ -248,7 +248,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setVector3f(int id, Object value) {
+        public AbstractDataWatcherBuilder.Builder setVector3f(final int id, final Object value) {
             dataWatcher.setObject(watcherObjectVector3f(id), value);
 
             return this;
@@ -262,28 +262,28 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder set(int id, Optional<BlockPosition> value) {
+        public AbstractDataWatcherBuilder.Builder set(final int id, final Optional<BlockPosition> value) {
             dataWatcher.setObject(watcherObjectOptionalBlockPosition(id), value);
 
             return this;
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setEnumDirection(int id, Object value) {
+        public AbstractDataWatcherBuilder.Builder setEnumDirection(final int id, final Object value) {
             dataWatcher.setObject(watcherObjectEnumDirection(id), value);
 
             return this;
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setOptionalUUID(int id, Object value) {
+        public AbstractDataWatcherBuilder.Builder setOptionalUUID(final int id, final Object value) {
             dataWatcher.setObject(watcherObjectOptionalUUID(id), value);
 
             return this;
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder setNBTTagCompound(int id, Object value) {
+        public AbstractDataWatcherBuilder.Builder setNBTTagCompound(final int id, final Object value) {
             dataWatcher.setObject(watcherObjectNBTTagCompound(id), value);
 
             return this;
