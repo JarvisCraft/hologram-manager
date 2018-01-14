@@ -19,7 +19,6 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.NmsManager;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -33,6 +32,15 @@ public class HologramManager {
 
     @NonNull @Getter private final Map<String, Hologram> holograms = new ConcurrentHashMap<>();
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Constants
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static final MovementVector EMPTY_VECTOR = new MovementVector();
+    private static final MovementVector SNEAK_OFF_VECTOR = new MovementVector(0, 0.8, 0);
+    private static final MovementVector SNEAK_ON_VECTOR = new MovementVector(0, -0.8, 0);
+
     ///////////////////////////////////////////////////////////////////////////
     // Basic systems
     ///////////////////////////////////////////////////////////////////////////
@@ -40,6 +48,7 @@ public class HologramManager {
     public HologramManager initAttaching() {
         Bukkit.getPluginManager().registerEvents(new PluginDisableEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerMoveEventListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerToggleSneakEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerTeleportEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitEventListener(), plugin);
@@ -64,17 +73,14 @@ public class HologramManager {
     /**
      * Creates a custom hologram stored by given id
      * @param id custom id for storing hologram
-     * @param location ru.progrm_jarvis.minecraft.spigot.hologram_manager.util at which the lowest line of hologram is
+     * @param location location at which the lowest line of hologram is
      * @param linesInterval interval between nearest hologram lines
      * @param text text content of lines
      * @param global whether or not the hologram should be marked as global (seen by everyone)
      * @return hologram created
      */
-    public Hologram create(@NonNull final String id,
-                           @NonNull final Location location,
-                           final Vector linesInterval,
-                           @NonNull final String[] text,
-                           final boolean global) {
+    public Hologram create(@NonNull final String id, @NonNull final Location location, final Vector linesInterval,
+                           @NonNull final String[] text, final boolean global) {
         val lineLocations = new Location[text.length]; // array of locations to spawn lines
         for (int i = 0; i < text.length; i++) {
             if (i == 0) {
@@ -90,7 +96,7 @@ public class HologramManager {
 
         // Add line to Hologram object
         for (int i = 0; i < lineLocations.length; i++) hologram
-                .add(new HologramLine(text[i], NmsManager.nextEntityId(), lineLocations[i]));
+                .add(new HologramLine(text[i], lineLocations[i]));
 
         holograms.put(id, hologram);
 
@@ -106,12 +112,8 @@ public class HologramManager {
      * @param players players to which to show hologram
      * @return hologram created
      */
-    public Hologram create(@NonNull final String id,
-                           @NonNull final Location location,
-                           final Vector linesInterval,
-                           @NonNull final String[] text,
-                           final boolean global,
-                           final boolean add,
+    public Hologram create(@NonNull final String id, @NonNull final Location location, final Vector linesInterval,
+                           @NonNull final String[] text, final boolean global, final boolean add,
                            final Player... players) {
         val hologram = create(id, location, linesInterval, text, global).addAllPlayers(players);
 
@@ -188,23 +190,17 @@ public class HologramManager {
         return this;
     }
 
-    public HologramManager changeWorld(final String id,
-                                       final Location location,
-                                       final boolean remove) {
+    public HologramManager changeWorld(final String id, final Location location, final boolean remove) {
         getOrThrow(id).changeWorld(location, remove);
         return this;
     }
 
-    public HologramManager changeWorld(final String id,
-                                        final World world,
-                                        final boolean remove) {
+    public HologramManager changeWorld(final String id, final World world, final boolean remove) {
         getOrThrow(id).changeWorld(world, remove);
         return this;
     }
 
-    public HologramManager changeWorldAndCoordinates(final String id,
-                                       final World world,
-                                       final boolean remove) {
+    public HologramManager changeWorldAndCoordinates(final String id, final World world, final boolean remove) {
         getOrThrow(id).changeWorldAndCoordinates(world, remove);
         return this;
     }
@@ -260,8 +256,9 @@ public class HologramManager {
 
     public HologramManager syncAllAttached() {
         synchronized (attachments) {
-            for (val entry : attachments.entries()) entry.getValue().teleport(entry.getKey().getLocation(),
-                    entry.getValue().getAllAvailablePlayers());
+            for (val entry : attachments.entries()) entry.getValue().teleport(entry.getKey().getLocation().add(entry
+                            .getKey().isSneaking() ? SNEAK_ON_VECTOR : EMPTY_VECTOR), entry.getValue()
+                    .getAllAvailablePlayers());
         }
 
         return this;
@@ -300,6 +297,26 @@ public class HologramManager {
         @EventHandler(priority = EventPriority.MONITOR)
         public void onPlayerMove(final PlayerMoveEvent event) {
             moveAttached(event.getPlayer(), event.getFrom(), event.getTo());
+        }
+    }
+
+    private void moveAttached(final Player player, final MovementVector movement) {
+        // Get all attachments of a player
+        val holograms = attachments.get(player);
+
+        // return if no attachments to player
+        if (holograms == null || holograms.isEmpty()) return;
+
+        //Move all attached holograms
+        synchronized (attachments) {
+            for (val hologram : holograms) hologram.move(movement, hologram.getAllAvailablePlayers());
+        }
+    }
+
+    private final class PlayerToggleSneakEventListener implements Listener {
+        @EventHandler(priority = EventPriority.MONITOR)
+        public void onPlayerToggleSneak(final PlayerToggleSneakEvent event) {
+            moveAttached(event.getPlayer(), event.isSneaking() ? SNEAK_ON_VECTOR : SNEAK_OFF_VECTOR);
         }
     }
 

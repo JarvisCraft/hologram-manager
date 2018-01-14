@@ -25,7 +25,7 @@ public class NmsManager {
         }
     }
 
-    public static int nextEntityId() {
+    @Synchronized public static int nextEntityId() {
         val accessible = entityCountField.isAccessible();
         entityCountField.setAccessible(true);
 

@@ -3,9 +3,12 @@ package ru.progrm_jarvis.minecraft.spigot.hologram_manager;
 import com.comphenix.packetwrapper.*;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import lombok.*;
+import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -31,7 +34,7 @@ public class Hologram extends ArrayList<HologramLine> {
     @NonNull private final boolean global;
     @NonNull @Setter private World world;
     @Setter private Vector vectorAboveLocation = null;
-    private static final AbstractDataWatcherBuilder dataWatcherBuilder;
+    @NonNull @Getter private static final AbstractDataWatcherBuilder dataWatcherBuilder;
 
     static {
         dataWatcherBuilder = NmsManager.getNmsVersion().getGeneration() < 9
@@ -59,16 +62,6 @@ public class Hologram extends ArrayList<HologramLine> {
     // DataWatcher
     ///////////////////////////////////////////////////////////////////////////
 
-    public WrappedDataWatcher getDefaultDataWatcher(final String name) {
-        return dataWatcherBuilder.builder()
-                .set(0, (byte) 0x20)
-                .set(2, name)
-                .set(3, true)
-                .set(5, true)
-                .set(11, (byte) 0x10)
-                .get();
-    }
-
     public String[] getText() {
         val text = new String[size()];
         for (int i = 0; i < size(); i++) text[i] = get(i).getText();
@@ -80,13 +73,8 @@ public class Hologram extends ArrayList<HologramLine> {
         int i = 0;
 
         // Create update Packet
-        for (val line : this) {
-            val lineText = lines[i];
-            if (i < lines.length) packets[i++] = new WrapperPlayServerEntityMetadata() {{
-                setEntityID(line.getId());
-                setMetadata(Collections.singletonList(dataWatcherBuilder.createWatchable(2, lineText)));
-            }};
-        }
+        for (val line : this) if (i < lines.length) packets[i] = PacketGenerator
+                .metadata(line, MetadataGenerator.getNameMetadata(lines[i++]));
 
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
         return this;
@@ -97,10 +85,8 @@ public class Hologram extends ArrayList<HologramLine> {
         int i = 0;
 
         // Create update Packet
-        for (val line : lines.entrySet()) packets[i++] = new WrapperPlayServerEntityMetadata() {{
-            setEntityID(get(line.getKey()).getId());
-            setMetadata(Collections.singletonList(dataWatcherBuilder.createWatchable(2, line.getValue())));
-        }};
+        for (val line : lines.entrySet()) packets[i++]
+                = PacketGenerator.metadata(get(line.getKey()), MetadataGenerator.getNameMetadata(line.getValue()));
 
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
         return this;
@@ -114,14 +100,8 @@ public class Hologram extends ArrayList<HologramLine> {
         val packets = new WrapperPlayServerSpawnEntityLiving[size()];
         int i = 0;
         // Create spawning Packet
-        for (val line : this) packets[i++] = new WrapperPlayServerSpawnEntityLiving() {{
-            setEntityID(line.getId());
-            setType(EntityType.ARMOR_STAND);
-            setX(line.getLocation().getX());
-            setY(line.getLocation().getY());
-            setZ(line.getLocation().getZ());
-            setMetadata(getDefaultDataWatcher(line.getText()));
-        }};
+        for (val line : this) packets[i++] = PacketGenerator.spawn(line, MetadataGenerator.getDefault(line.getText(),
+                true, MetadataGenerator.ArmorStandTag.MARKER));
 
         for (val player : players) for (val packet : packets) {
             packet.sendPacket(player);
@@ -136,13 +116,7 @@ public class Hologram extends ArrayList<HologramLine> {
     }
 
     public Hologram despawn(final boolean remove, final Player... players) {
-        val entityIds = new int[size()];
-        int i = 0;
-        // Create despawning Packet
-        for (val line : this) entityIds[i++] = line.getId();
-        val packet = new WrapperPlayServerEntityDestroy() {{
-            setEntityIds(entityIds);
-        }};
+        val packet = PacketGenerator.destroy(this);
 
         for (val player : players) {
             packet.sendPacket(player);
@@ -181,31 +155,12 @@ public class Hologram extends ArrayList<HologramLine> {
             line.getLocation().add(movement);
 
             // Send teleportation ru.progrm_jarvis.minecraft.spigot.hologram_manager.packet
-            packets[i++] = movement.isSmall() ? createLineMovePacket(line, movement) : createLineTeleportPacket(line);
+            packets[i++] = PacketGenerator.moveOrTeleport(line, movement);
         }
 
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
 
         return this;
-    }
-
-    private WrapperPlayServerRelEntityMove createLineMovePacket(final HologramLine line,
-                                                                final MovementVector movement) {
-        return new WrapperPlayServerRelEntityMove() {{
-            setEntityID(line.getId());
-            setDx((int) (movement.getX() * 32 * 128));
-            setDy((int) (movement.getY() * 32 * 128));
-            setDz((int) (movement.getZ() * 32 * 128));
-        }};
-    }
-
-    private WrapperPlayServerEntityTeleport createLineTeleportPacket(final HologramLine line) {
-        return new WrapperPlayServerEntityTeleport() {{
-            setEntityID(line.getId());
-            setX(line.getLocation().getX());
-            setY(line.getLocation().getY());
-            setZ(line.getLocation().getZ());
-        }};
     }
 
     private Hologram multiplyLocations(final double multiplierX, final double multiplierZ) {
@@ -244,7 +199,7 @@ public class Hologram extends ArrayList<HologramLine> {
             // else calculate relatively
             else get(i).setLocation((get(i + 1).getLocation()).clone().add(deltaVectors[i]));
 
-            packets[i] = createLineTeleportPacket(get(i));
+            packets[i] = PacketGenerator.teleport(get(i));
         }
 
 
@@ -287,8 +242,7 @@ public class Hologram extends ArrayList<HologramLine> {
         return changeWorld(location.getWorld(), remove);
     }
 
-    public Hologram changeWorldAndCoordinates(final World world,
-                                              final boolean remove) {
+    public Hologram changeWorldAndCoordinates(final World world, final boolean remove) {
         val currentEnvironment = this.world.getEnvironment();
         val targetEnvironment = world.getEnvironment();
 
@@ -337,16 +291,10 @@ public class Hologram extends ArrayList<HologramLine> {
     // Equipment
     ///////////////////////////////////////////////////////////////////////////
 
-    public Hologram setItem(final int lineIndex,
-                            final EnumWrappers.ItemSlot slot,
-                            final ItemStack item,
+    public Hologram setItem(final int lineIndex, final EnumWrappers.ItemSlot slot, final ItemStack item,
                             final Player... players) {
         if (lineIndex < size() && lineIndex >= 0) {
-            val packet = new WrapperPlayServerEntityEquipment() {{
-                setEntityID(get(lineIndex).getId());
-                setSlot(slot);
-                setItem(item);
-            }};
+            val packet = PacketGenerator.equipment(get(lineIndex), slot, item);
 
             for (val player : players) packet.sendPacket(player);
         }
@@ -354,36 +302,155 @@ public class Hologram extends ArrayList<HologramLine> {
         return this;
     }
 
-    public Hologram setItem(final EnumWrappers.ItemSlot slot, final ItemStack item, final Player... players) {
+    public Hologram setItemAll(final EnumWrappers.ItemSlot slot, final ItemStack item, final Player... players) {
         val packets = new WrapperPlayServerEntityEquipment[size()];
 
         int i = 0;
         // Create Packet
-        for (val line : this) packets[i++] = new WrapperPlayServerEntityEquipment() {{
-            setEntityID(line.getId());
-            setSlot(slot);
-            setItem(item);
-        }};
+        for (val line : this) packets[i++] = PacketGenerator.equipment(line, slot, item);
 
         for (val player : players) for (val packet : packets) packet.sendPacket(player);
 
         return this;
     }
 
-    public Hologram add(final HologramLine line, final Vector movePrevious) {
+    @Synchronized("$locationLock") public Hologram add(final HologramLine line, final MovementVector movePrevious,
+                                                       final Player... players) {
         for (val previousLine : this) previousLine.getLocation().add(movePrevious);
 
         add(line);
 
+        if (players.length == 0) return this;
+
+        val packets = new AbstractPacket[size()];
+        for (int i = 0; i < size() - 1; i++) packets[i] = PacketGenerator.moveOrTeleport(get(i), movePrevious);
+        packets[size() - 1] = PacketGenerator.spawn(line, MetadataGenerator.getDefault(line.getText(), true,
+                MetadataGenerator.ArmorStandTag.MARKER));
+
+        for (val player : players) for (val packet : packets) packet.sendPacket(player);
+
         return this;
     }
 
-    public Hologram add(final int index, final HologramLine line, final Vector movePrevious, final Vector moveNext) {
+    @Synchronized("$locationLock") public Hologram add(final int index, final HologramLine line,
+                                                       final MovementVector movePrevious, final MovementVector moveNext,
+                                                       final Player... players) {
         add(index, line);
 
         for (int i = 0; i < index; i++) get(i).getLocation().add(movePrevious);
         for (int i = index + 1; i < this.size(); i++) get(i).getLocation().add(moveNext);
 
+        if (players.length == 0) return this;
+
+        val packets = new AbstractPacket[size()];
+        for (int i = 0; i < index; i++) packets[i] = PacketGenerator.moveOrTeleport(get(i), movePrevious);
+        packets[index] = PacketGenerator.spawn(line, MetadataGenerator.getDefault(line.getText(), true,
+                MetadataGenerator.ArmorStandTag.MARKER));
+        for (int i = index + 1; i < this.size(); i++) packets[i] = PacketGenerator.moveOrTeleport(get(i), moveNext);
+
+        for (val player : players) for (val packet : packets) packet.sendPacket(player);
+
         return this;
+    }
+
+    @UtilityClass
+    private static class PacketGenerator {
+        public WrapperPlayServerSpawnEntityLiving spawn(final HologramLine line, final WrappedDataWatcher dataWatcher) {
+            return new WrapperPlayServerSpawnEntityLiving() {{
+                setEntityID(line.getId());
+                setType(EntityType.ARMOR_STAND);
+                setX(line.getLocation().getX());
+                setY(line.getLocation().getY());
+                setZ(line.getLocation().getZ());
+                setMetadata(dataWatcher);
+            }};
+        }
+
+        public WrapperPlayServerEntityDestroy destroy(final HologramLine... lines) {
+            val entityIds = new int[lines.length];
+            int i = 0;
+            // Create despawning Packet
+            for (val line : lines) entityIds[i++] = line.getId();
+
+            return new WrapperPlayServerEntityDestroy() {{
+                setEntityIds(entityIds);
+            }};
+        }
+
+        public WrapperPlayServerEntityDestroy destroy(final List<HologramLine> lines) {
+            val entityIds = new int[lines.size()];
+            int i = 0;
+            // Create despawning Packet
+            for (val line : lines) entityIds[i++] = line.getId();
+
+            return new WrapperPlayServerEntityDestroy() {{
+                setEntityIds(entityIds);
+            }};
+        }
+
+        public AbstractPacket moveOrTeleport(final HologramLine line, final MovementVector movement) {
+            return movement.isSmall() ? move(line, movement) : teleport(line);
+        }
+
+        public WrapperPlayServerRelEntityMove move(final HologramLine line, final MovementVector movement) {
+            return new WrapperPlayServerRelEntityMove() {{
+                setEntityID(line.getId());
+                setDx((int) (movement.getX() * 32 * 128));
+                setDy((int) (movement.getY() * 32 * 128));
+                setDz((int) (movement.getZ() * 32 * 128));
+            }};
+        }
+
+        public WrapperPlayServerEntityTeleport teleport(final HologramLine line) {
+            return new WrapperPlayServerEntityTeleport() {{
+                setEntityID(line.getId());
+                setX(line.getLocation().getX());
+                setY(line.getLocation().getY());
+                setZ(line.getLocation().getZ());
+            }};
+        }
+
+        public WrapperPlayServerEntityMetadata metadata(final HologramLine line,
+                                                        final List<WrappedWatchableObject> watchableObjects) {
+            return new WrapperPlayServerEntityMetadata() {{
+                setEntityID(line.getId());
+                setMetadata(watchableObjects);
+            }};
+        }
+
+        public WrapperPlayServerEntityEquipment equipment(final HologramLine line, final EnumWrappers.ItemSlot slot,
+                                                          final ItemStack item) {
+            return new WrapperPlayServerEntityEquipment() {{
+                setEntityID(line.getId());
+                setSlot(slot);
+                if (item != null && item.getType() != Material.AIR) setItem(item);
+            }};
+        }
+    }
+
+    @UtilityClass
+    public static class MetadataGenerator {
+        public WrappedDataWatcher getDefault(final String name, final boolean invisible, final byte... tags) {
+            byte tagsByte = 0;
+            for (val tag : tags) tagsByte |= tag;
+
+            val builder = dataWatcherBuilder.builder().set(5, true).set(11, tagsByte);
+            if (invisible) builder.set(0, (byte) 0x20);
+
+            if (name != null) builder.set(2, name).set(3, true);
+
+            return builder.build();
+        }
+
+        public List<WrappedWatchableObject> getNameMetadata(final String name) {
+            return name == null
+                    ? Collections.singletonList(dataWatcherBuilder.createWatchable(3, false))
+                    : Arrays.asList(dataWatcherBuilder.createWatchable(2, name),
+                    dataWatcherBuilder.createWatchable(3, true));
+        }
+
+        public final class ArmorStandTag {
+            public static final byte SMALL = 0x01, ARMS = 0x04, NO_BASE_PLATE = 0x08, MARKER = 0x10;
+        }
     }
 }
