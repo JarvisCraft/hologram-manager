@@ -71,7 +71,8 @@ public class HologramManager {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Creates a custom hologram stored by given id
+     * Creates a custom hologram stored by given id.
+     *
      * @param id custom id for storing hologram
      * @param location location at which the lowest line of hologram is
      * @param linesInterval interval between nearest hologram lines
@@ -104,11 +105,14 @@ public class HologramManager {
     }
 
     /**
-     * Creates a custom hologram stored by given id
+     * Creates a custom hologram stored by given id and shows it to players given.
+     *
      * @param id custom id for storing hologram
      * @param location ru.progrm_jarvis.minecraft.spigot.hologram_manager.util at which the lowest line of hologram is
      * @param linesInterval interval between nearest hologram lines
      * @param text text content of lines
+     * @param add whether to add the players to hologram's player list for further usage
+     * @param global whether or not the hologram should be marked as global (seen by everyone)
      * @param players players to which to show hologram
      * @return hologram created
      */
