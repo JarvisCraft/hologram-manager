@@ -123,7 +123,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
     }
 
     @Override
-    public WrappedWatchableObject createWatchable(final int id, final ItemStack value) {
+    public WrappedWatchableObject createWatchableItemStack(final int id, final Object value) {
         return new WrappedWatchableObject(watcherObjectItemStack(id), value);
     }
 

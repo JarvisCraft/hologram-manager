@@ -5,7 +5,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import lombok.*;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -53,6 +53,7 @@ public class HologramManager {
         Bukkit.getPluginManager().registerEvents(new PlayerJoinEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitEventListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new PlayerChangedWorldEventListener(), plugin);
+
         return this;
     }
 

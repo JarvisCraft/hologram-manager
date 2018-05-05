@@ -42,7 +42,7 @@ public abstract class AbstractDataWatcherBuilder {
         return new WrappedWatchableObject(id, value);
     }
 
-    public WrappedWatchableObject createWatchable(final int id, final ItemStack value) {
+    public WrappedWatchableObject createWatchableItemStack(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
     }
 
