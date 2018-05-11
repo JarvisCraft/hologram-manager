@@ -9,7 +9,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -112,8 +111,8 @@ public class HologramManager {
      * @param location ru.progrm_jarvis.minecraft.spigot.hologram_manager.util at which the lowest line of hologram is
      * @param linesInterval interval between nearest hologram lines
      * @param text text content of lines
-     * @param add whether to add the players to hologram's player list for further usage
      * @param global whether or not the hologram should be marked as global (seen by everyone)
+     * @param add whether to add the players to hologram's player list for further usage
      * @param players players to which to show hologram
      * @return hologram created
      */
@@ -269,10 +268,6 @@ public class HologramManager {
         return this;
     }
 
-    public int incrementAmount(FileConfiguration config, String path) {
-        return config.isConfigurationSection(path) ? config.getConfigurationSection(path).getKeys(false).size() : 0;
-    }
-
     public HologramManager detach(final String id, final Player... players) {
         return detach(getOrThrow(id), players);
     }
@@ -281,7 +276,7 @@ public class HologramManager {
         for (val hologram : holograms.values()) {
             val playersAble = new ArrayList<Player>();
             for (val player : players) if (hologram.isAvailableFor(player)) playersAble.add(player);
-            hologram.spawn(true, playersAble.toArray(new Player[playersAble.size()]));
+            hologram.spawn(true, playersAble.toArray(new Player[0]));
         }
 
         return this;

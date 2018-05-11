@@ -26,7 +26,7 @@ import java.util.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class Hologram extends ArrayList<HologramLine> {
     private static final long serialVersionUID = 480275233413221397L;
 
@@ -131,7 +131,7 @@ public class Hologram extends ArrayList<HologramLine> {
     }
 
     public Hologram despawnAll() {
-        return despawn(true, players.toArray(new Player[players.size()]));
+        return despawn(true, players.toArray(new Player[0]));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -261,7 +261,7 @@ public class Hologram extends ArrayList<HologramLine> {
         val players = new ArrayList<Player>();
         // if add == true then spawn for all players in target world, else only for those who are in the set of players
         for (val player : add ? world.getPlayers() : this.players) if (isAvailableFor(player)) players.add(player);
-        spawn(true, players.toArray(new Player[players.size()]));
+        spawn(true, players.toArray(new Player[0]));
         return this;
     }
 
@@ -269,7 +269,7 @@ public class Hologram extends ArrayList<HologramLine> {
         val players = new ArrayList<Player>();
         // will despawn for all players which's world is not target
         for (val player : this.players) if (world != player.getWorld()) players.add(player);
-        despawn(remove, players.toArray(new Player[players.size()]));
+        despawn(remove, players.toArray(new Player[0]));
         return this;
     }
 
@@ -284,7 +284,7 @@ public class Hologram extends ArrayList<HologramLine> {
     public Player[] getAllAvailablePlayers() {
         val players = new ArrayList<Player>();
         for (val player : Bukkit.getOnlinePlayers()) if (isAvailableFor(player)) players.add(player);
-        return players.toArray(new Player[players.size()]);
+        return players.toArray(new Player[0]);
     }
 
     ///////////////////////////////////////////////////////////////////////////
