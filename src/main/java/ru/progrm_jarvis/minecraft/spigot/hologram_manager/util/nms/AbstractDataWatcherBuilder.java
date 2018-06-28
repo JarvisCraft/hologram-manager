@@ -1,5 +1,6 @@
 package ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms;
 
+import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.Vector3F;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
@@ -44,6 +45,10 @@ public abstract class AbstractDataWatcherBuilder {
 
     public WrappedWatchableObject createWatchableItemStack(final int id, final Object value) {
         return new WrappedWatchableObject(id, value);
+    }
+
+    public WrappedWatchableObject createWatchable(final int id, final ItemStack value) {
+        return createWatchableItemStack(id, MinecraftReflection.getMinecraftItemStack(value));
     }
 
     public WrappedWatchableObject createWatchableOptionalIBlockData(final int id, final Optional<Object> value) {
@@ -133,8 +138,14 @@ public abstract class AbstractDataWatcherBuilder {
         }
 
 
-        public Builder set(final int id, final ItemStack value) {
+        public Builder setItemStack(final int id, final Object value) {
             dataWatcher.setObject(id, value);
+
+            return this;
+        }
+
+        public Builder set(final int id, final ItemStack value) {
+            dataWatcher.setObject(id, MinecraftReflection.getMinecraftItemStack(value));
 
             return this;
         }

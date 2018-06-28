@@ -227,7 +227,7 @@ public class DataWatcherBuilder extends AbstractDataWatcherBuilder {
         }
 
         @Override
-        public AbstractDataWatcherBuilder.Builder set(final int id, final ItemStack value) {
+        public AbstractDataWatcherBuilder.Builder setItemStack(int id, Object value) {
             dataWatcher.setObject(watcherObjectItemStack(id), value);
 
             return this;
