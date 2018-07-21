@@ -15,12 +15,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.VectorUtils;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.AbstractDataWatcherBuilder;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.DataWatcherBuilder;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.NmsManager;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.OldDataWatcherBuilder;
 
 import java.util.*;
+
+import static ru.progrm_jarvis.minecraft.nmsutil.NmsManager.DATA_WATCHER_BUILDER;
 
 @Getter
 @ToString
@@ -34,12 +32,6 @@ public class Hologram extends ArrayList<HologramLine> {
     @NonNull private final boolean global;
     @NonNull @Setter private World world;
     @Setter private Vector vectorAboveLocation = null;
-    @NonNull @Getter private static final AbstractDataWatcherBuilder dataWatcherBuilder;
-
-    static {
-        dataWatcherBuilder = NmsManager.getNmsVersion().getGeneration() < 9
-                ? new OldDataWatcherBuilder() : new DataWatcherBuilder();
-    }
 
     @NonNull private final Set<Player> players = new HashSet<>();
     @NonNull private final Set<Player> disabledPlayers = new HashSet<>();
@@ -434,7 +426,7 @@ public class Hologram extends ArrayList<HologramLine> {
             byte tagsByte = 0;
             for (val tag : tags) tagsByte |= tag;
 
-            val builder = dataWatcherBuilder.builder().set(5, true).set(11, tagsByte);
+            val builder = DATA_WATCHER_BUILDER.builder().set(5, true).set(11, tagsByte);
             if (invisible) builder.set(0, (byte) 0x20);
 
             if (name != null) builder.set(2, name).set(3, true);
@@ -444,9 +436,9 @@ public class Hologram extends ArrayList<HologramLine> {
 
         public List<WrappedWatchableObject> getNameMetadata(final String name) {
             return name == null
-                    ? Collections.singletonList(dataWatcherBuilder.createWatchable(3, false))
-                    : Arrays.asList(dataWatcherBuilder.createWatchable(2, name),
-                    dataWatcherBuilder.createWatchable(3, true));
+                    ? Collections.singletonList(DATA_WATCHER_BUILDER.createWatchable(3, false))
+                    : Arrays.asList(DATA_WATCHER_BUILDER.createWatchable(2, name),
+                    DATA_WATCHER_BUILDER.createWatchable(3, true));
         }
 
         public final class ArmorStandTag {
