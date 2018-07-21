@@ -2,7 +2,7 @@ package ru.progrm_jarvis.minecraft.spigot.hologram_manager;
 
 import lombok.*;
 import org.bukkit.Location;
-import ru.progrm_jarvis.minecraft.spigot.hologram_manager.util.nms.NmsManager;
+import ru.progrm_jarvis.minecraft.nmsutil.NmsManager;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
